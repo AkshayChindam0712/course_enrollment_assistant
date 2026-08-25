@@ -1,281 +1,174 @@
-Course Enrolment Assistant
+# 🎓 Course Enrolment Assistant
 
-An AI-assisted course enrolment system built with Python, FastAPI, HTML/CSS/JavaScript, rule-based eligibility checks, handbook retrieval (RAG), and SmolLM2-1.7B-Instruct.
+An AI-powered **Course Enrolment Assistant** that helps students understand course eligibility, enrolment restrictions, prerequisites, fees, credit limits, timetable clashes, and handbook requirements.
 
-Project Flow
+The system combines:
 
+- **FastAPI** for the backend API
+- **HTML, CSS and JavaScript** for the web interface
+- **SQLite** for student, course and enrolment data
+- **Python rule-based validation** for deterministic enrolment decisions
+- **RAG / handbook search** for retrieving relevant policy information
+- **SmolLM2-1.7B-Instruct** for natural-language AI responses
 
+The system evaluates **all applicable enrolment rules**, rather than stopping at the first failed rule.
 
-Main Workflow
+---
 
-Student enters a question or uses an enrolment tool.
+# 📌 Project Overview
 
-HTML/CSS/JavaScript sends the request to FastAPI.
+Students often need to know whether they are eligible to enrol in a particular course and, if not, why their enrolment is blocked.
 
-The API identifies the relevant student/course.
+Instead of manually checking multiple academic rules and handbook pages, this application provides one interface where a student can:
 
-The extraction layer maps natural language to a course.
+1. Search for their student record.
+2. View their fee status.
+3. View their current and completed enrolments.
+4. Browse available courses.
+5. Check eligibility for a course.
+6. See every applicable enrolment reason.
+7. Ask a natural-language question using **Ask AI**.
+8. Receive an AI-generated explanation based on the rule results and handbook information.
 
-All five enrolment rules are evaluated.
+---
 
-Relevant handbook information is retrieved.
+# 🏗️ System Architecture
 
-The AI reply layer generates a student-friendly response.
+```mermaid
+flowchart LR
 
-The response is validated and a fallback can be returned if validation fails.
+    A["👨‍🎓 Student"] --> B["🌐 Web Interface<br/>index.html<br/>style.css<br/>script.js"]
 
-The final response is displayed on the webpage.
+    B --> C["⚡ FastAPI<br/>api.py"]
 
-Technology Stack
+    C --> D["🔍 Request Processing<br/>extract.py"]
 
-Component
+    D --> E["📚 Course / Student Data"]
 
-Technology
+    C --> F["📋 Rules Engine<br/>rules.py"]
 
-Frontend
+    F --> G["SQLite Database<br/>enrolment.db"]
 
-HTML, CSS, JavaScript
+    C --> H["🔎 Handbook Search / RAG<br/>search.py"]
 
-Backend
+    H --> I["📖 Handbook / Knowledge"]
 
-FastAPI
+    C --> J["🤖 AI Reply<br/>reply.py / assistant.py"]
 
-Server
+    J --> K["SmolLM2-1.7B-Instruct"]
 
-Uvicorn
+    K --> J
 
-Database
+    J --> L["✅ Response Validation"]
 
-SQLite
+    F --> L
+    H --> L
 
-LLM
+    L --> M["💬 Final Response"]
 
-SmolLM2-1.7B-Instruct
+    M --> B
 
-Retrieval
+    style A fill:#e8f1ff,stroke:#2563eb
+    style B fill:#dbeafe,stroke:#2563eb
+    style C fill:#dcfce7,stroke:#16a34a
+    style F fill:#dcfce7,stroke:#16a34a
+    style G fill:#fff7ed,stroke:#ea580c
+    style H fill:#f3e8ff,stroke:#9333ea
+    style I fill:#f3e8ff,stroke:#9333ea
+    style J fill:#dbeafe,stroke:#2563eb
+    style K fill:#dbeafe,stroke:#2563eb
+    style L fill:#fef3c7,stroke:#d97706
+    style M fill:#dcfce7,stroke:#16a34a
+```
 
-Handbook / RAG
+---
 
-Rules
+# 🔄 End-to-End Data Flow
 
-Python
+```mermaid
+flowchart TD
 
-Version Control
+    A["Student enters question"] --> B["Web Interface"]
 
-Git / GitHub
+    B --> C["FastAPI /ask"]
 
-Example Prompts and Outputs
+    C --> D["Extract student ID<br/>and course intent"]
 
-R1 — Algorithms
+    D --> E["Retrieve student/course information"]
 
-Student: S-104
+    E --> F["Run all five enrolment rules"]
 
-Prompt: I want to take Algorithms this term.
+    F --> G["Collect ALL applicable reasons"]
 
-Course: CS201
+    G --> H["Search handbook / RAG"]
 
-Output:
+    H --> I["Retrieve relevant handbook information"]
 
-Enrolment is blocked because: CS101 grade missing, needs 40.
+    I --> J["Build context"]
 
-R2 — Distributed Systems
+    G --> J
 
-Student: S-101
+    J --> K["SmolLM2-1.7B-Instruct"]
 
-Prompt: Can I add Distributed Systems?
+    K --> L["Generate AI response"]
 
-Course: CS310
+    L --> M{"Validation"}
 
-Output:
+    M -->|"PASS"| N["Return final AI response"]
 
-Enrolment is blocked because: full, 25 of 25.
+    M -->|"FAIL"| O["Fallback / rewrite / reasons"]
 
-R3 — Databases
+    O --> N
 
-Student: S-103
+    N --> P["Display response on webpage"]
 
-Prompt: I would like to join Databases please.
+    P --> Q["Student"]
+```
 
-Course: CS202
+---
 
-Output:
+# 🧩 Project Layers
 
-Enrolment is blocked because: clashes with MA150 Wed 14:00.
+| Layer | Component | Responsibility |
+|---|---|---|
+| UI Layer | `index.html` | Webpage structure |
+| UI Layer | `style.css` | Webpage styling |
+| UI Layer | `script.js` | API communication and UI actions |
+| API Layer | `api.py` | FastAPI endpoints |
+| Rule Layer | `rules.py` | Course enrolment eligibility rules |
+| AI Layer | `reply.py` | AI response generation |
+| AI Layer | `assistant.py` | Assistant / response processing |
+| Extraction | `extract.py` | Extract useful information from requests |
+| Search / RAG | `search.py` | Handbook / knowledge retrieval |
+| Database | `enrolment.db` | Student, course and enrolment data |
+| Data | `data/` | Project input/reference data |
+| Results | `*_results.json` | Task/test outputs |
 
-R4 — Machine Learning
+---
 
-Student: S-102
+# 🛠️ Technology Stack
 
-Prompt: Trying to sign up for Machine Learning and it will not let me.
+| Technology | Purpose |
+|---|---|
+| Python | Core application logic |
+| FastAPI | REST API backend |
+| Uvicorn | API server |
+| HTML | Frontend structure |
+| CSS | Frontend styling |
+| JavaScript | Frontend/API integration |
+| SQLite | Database |
+| RAG | Handbook information retrieval |
+| SmolLM2-1.7B-Instruct | AI response generation |
+| Git | Version control |
+| GitHub | Source-code repository |
 
-Course: CS301
+---
 
-Output:
+# 📂 Project Structure
 
-Enrolment is blocked because: fees are unpaid; would be 65 credits, limit 60.
-
-Important: R4 has two independent blocking reasons, and both are returned.
-
-R5 — Machine Learning
-
-Student: S-105
-
-Prompt: Machine Learning please, I have done everything it asks for.
-
-Course: CS301
-
-Output:
-
-Enrolment is blocked because: CS201 grade 48, needs 55.
-
-R6 — Data Visualisation
-
-Student: S-106
-
-Prompt: Could I take Data Visualisation?
-
-Course: DS220
-
-Output:
-
-You are eligible to enrol in DS220.
-
-Final Test Results
-
-ID
-
-Expected
-
-Actual
-
-Reasons
-
-Handbook
-
-Reply
-
-Overall
-
-R1
-
-CS201
-
-CS201
-
-PASS
-
-YES
-
-PASS
-
-PASS
-
-R2
-
-CS310
-
-CS310
-
-PASS
-
-YES
-
-PASS
-
-PASS
-
-R3
-
-CS202
-
-CS202
-
-PASS
-
-YES
-
-PASS
-
-PASS
-
-R4
-
-CS301
-
-CS301
-
-PASS
-
-YES
-
-PASS
-
-PASS
-
-R5
-
-CS301
-
-CS301
-
-PASS
-
-YES
-
-PASS
-
-PASS
-
-R6
-
-DS220
-
-DS220
-
-PASS
-
-NO
-
-PASS
-
-PASS
-
-Requests passed: 6/6
-
-Ask AI
-
-The Ask AI feature accepts a student ID and a natural-language question and sends the request to the FastAPI backend.
-
-Example:
-
-Student ID: S-102
-Question: Why can't I enrol in Machine Learning?
-
-Expected grounded answer:
-
-Enrolment is blocked because:
-- fees are unpaid
-- would be 65 credits, limit 60
-
-The AI response is generated using the project's instruction-following model and is grounded by the application's rule results and retrieved handbook information.
-
-Running the Project
-
-Start FastAPI:
-
-uvicorn api:app --reload
-
-Open the webpage:
-
-http://127.0.0.1:8000/
-
-FastAPI documentation:
-
-http://127.0.0.1:8000/docs
-
-Project Structure
-
+```text
 course_enrollment_assistant/
+│
 ├── api.py
 ├── assistant.py
 ├── check_data.py
@@ -285,24 +178,588 @@ course_enrollment_assistant/
 ├── reply.py
 ├── rules.py
 ├── search.py
+│
 ├── index.html
 ├── script.js
 ├── style.css
+│
 ├── data/
-├── handbook/
+│
 ├── enrolment.db
+│
 ├── extract_results.json
 ├── task8_results.json
 ├── task9_results.json
+│
 ├── README.md
-└── course_enrollment_flow.png
+└── .gitignore
+```
 
-Key Outcome
+---
 
-The complete validation achieved 6/6 requests passed.
+# ⚡ How the System Works
 
-The system correctly identified courses, returned all applicable enrolment reasons, retrieved handbook evidence where required, and generated valid replies.
+## 1. Student Question
 
-Model
+The student enters a natural-language question.
 
-The project documentation specifies SmolLM2-1.7B-Instruct. It is used for instruction-following and natural-language reply generation. Deterministic enrolment decisions remain grounded in the application's rules and retrieved information.
+Example:
+
+```text
+Why can't I enrol in Machine Learning?
+```
+
+The question is sent from the webpage to the FastAPI backend.
+
+---
+
+## 2. Request Processing
+
+The backend receives the request and identifies information such as:
+
+- Student ID
+- Course
+- User intent
+- Relevant keywords
+
+The extraction functionality is handled by:
+
+```text
+extract.py
+```
+
+---
+
+## 3. Student and Course Lookup
+
+The application retrieves information from:
+
+```text
+enrolment.db
+```
+
+The system can obtain:
+
+- Student details
+- Fee status
+- Programme information
+- Completed courses
+- Current enrolments
+- Course information
+- Prerequisites
+- Course capacity
+
+---
+
+# 📋 Enrolment Rules
+
+The rule engine is implemented in:
+
+```text
+rules.py
+```
+
+The system checks the applicable enrolment conditions.
+
+Examples include:
+
+| Rule | Example |
+|---|---|
+| Fees | Student has unpaid fees |
+| Prerequisites | Required course/grade not completed |
+| Capacity | Course is already full |
+| Credit limit | Student would exceed maximum credits |
+| Timetable clash | Course conflicts with another enrolment |
+
+### Important Design Decision
+
+The system does **not** stop at the first failure.
+
+It evaluates all relevant rules and returns every applicable reason.
+
+For example:
+
+```text
+Student: S-102
+Course: CS301
+```
+
+The result can contain:
+
+```text
+- fees are unpaid
+- would be 65 credits, limit 60
+```
+
+Both reasons are returned to the student.
+
+---
+
+# 🔎 RAG / Handbook Search
+
+The project uses handbook information to provide additional context for AI responses.
+
+The search functionality is handled through:
+
+```text
+search.py
+```
+
+The simplified RAG process is:
+
+```mermaid
+flowchart LR
+
+    A["Student Question"] --> B["Search Query"]
+
+    B --> C["Handbook Search"]
+
+    C --> D["Relevant Handbook Content"]
+
+    D --> E["AI Context"]
+
+    E --> F["SmolLM2-1.7B-Instruct"]
+
+    F --> G["AI Response"]
+```
+
+The retrieved information helps the AI response remain grounded in the available course and enrolment guidance.
+
+---
+
+# 🤖 Ask AI
+
+The **Ask AI** feature allows a student to ask an enrolment question using natural language.
+
+Example:
+
+```text
+Student ID:
+S-102
+
+Question:
+Why can't I enrol in Machine Learning?
+```
+
+The system processes the request and generates an answer based on the rule results and available handbook information.
+
+Example output:
+
+```text
+Enrolment is blocked because:
+
+1. Fees are unpaid.
+2. Enrolling in CS301 would result in 65 credits,
+   exceeding the 60-credit limit.
+```
+
+---
+
+# 🧠 AI Response Flow
+
+```mermaid
+flowchart TD
+
+    A["Student Question"] --> B["API"]
+
+    B --> C["Extract Information"]
+
+    C --> D["Run Rules"]
+
+    D --> E["Rule Reasons"]
+
+    B --> F["Handbook Search"]
+
+    F --> G["Relevant Handbook Content"]
+
+    E --> H["Context"]
+
+    G --> H
+
+    H --> I["SmolLM2-1.7B-Instruct"]
+
+    I --> J["Generated AI Reply"]
+
+    J --> K{"Validation"}
+
+    K -->|"Valid"| L["Return AI Reply"]
+
+    K -->|"Invalid"| M["Fallback / Rewrite / Reasons"]
+
+    M --> L
+
+    L --> N["Webpage"]
+```
+
+---
+
+# 🌐 API Endpoints
+
+The FastAPI backend exposes endpoints for the main application functions.
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/` | GET | Main webpage |
+| `/students/{student_id}` | GET | Get student information |
+| `/students/{student_id}/enrolments` | GET | Get student enrolments |
+| `/courses` | GET | Get all courses |
+| `/courses/{course_code}` | GET | Get individual course |
+| `/check/{student_id}/{course_code}` | GET | Check enrolment eligibility |
+| `/requests/{request_id}` | GET | Get student request |
+| `/ask` | GET | Ask AI question |
+
+> The exact endpoint list should match the current `api.py` committed to this repository.
+
+---
+
+# 🧪 Test Cases
+
+The project was tested against six student requests.
+
+| Request | Student | Course | Expected Result |
+|---|---|---|---|
+| R1 | S-104 | CS201 | Enrolment blocked |
+| R2 | S-101 | CS310 | Enrolment blocked |
+| R3 | S-103 | CS202 | Enrolment blocked |
+| R4 | S-102 | CS301 | Two reasons |
+| R5 | S-105 | CS301 | Enrolment blocked |
+| R6 | S-106 | DS220 | Approval |
+
+---
+
+# ✅ Important Test: R4
+
+R4 verifies that the system returns **both applicable reasons**.
+
+### Input
+
+```text
+Student ID: S-102
+Course: CS301
+```
+
+### Expected reasons
+
+```text
+fees are unpaid
+would be 65 credits, limit 60
+```
+
+### Expected response
+
+```text
+Enrolment is blocked because:
+
+- fees are unpaid
+- would be 65 credits, limit 60
+```
+
+This confirms that the rules engine evaluates multiple conditions instead of returning only the first failure.
+
+---
+
+# 🧪 Natural Language Test Prompts
+
+| ID | Prompt |
+|---|---|
+| R1 | `I want to take Algorithms this term.` |
+| R2 | `Can I add Distributed Systems?` |
+| R3 | `I would like to join Databases please.` |
+| R4 | `Trying to sign up for Machine Learning and it will not let me.` |
+| R5 | `Machine Learning please, I have done everything it asks for.` |
+| R6 | `Could I take Data Visualisation?` |
+
+---
+
+# 📊 Expected Test Results
+
+| Request | Course | Rule Check | AI Reply | Result |
+|---|---|---|---|---|
+| R1 | CS201 | PASS | PASS | ✅ |
+| R2 | CS310 | PASS | PASS | ✅ |
+| R3 | CS202 | PASS | PASS | ✅ |
+| R4 | CS301 | PASS | PASS | ✅ |
+| R5 | CS301 | PASS | PASS | ✅ |
+| R6 | DS220 | PASS | PASS | ✅ |
+
+### Overall
+
+```text
+6 / 6 requests passed
+```
+
+---
+
+# 🚀 Running the Application
+
+## 1. Open the project directory
+
+```bash
+cd course_enrollment_assistant
+```
+
+## 2. Start FastAPI
+
+```bash
+uvicorn api:app --reload
+```
+
+The server should start at:
+
+```text
+http://127.0.0.1:8000
+```
+
+## 3. Open the Web Application
+
+Open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+## 4. Open FastAPI Documentation
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# 🔧 Example API Requests
+
+### Get Student
+
+```text
+GET /students/S-102
+```
+
+### Get Enrolments
+
+```text
+GET /students/S-102/enrolments
+```
+
+### Get Courses
+
+```text
+GET /courses
+```
+
+### Get Course
+
+```text
+GET /courses/CS301
+```
+
+### Check Enrolment
+
+```text
+GET /check/S-102/CS301
+```
+
+### Ask AI
+
+```text
+GET /ask?student_id=S-102&message=Why%20can't%20I%20enrol%20in%20Machine%20Learning?
+```
+
+---
+
+# 🔐 Error Handling
+
+The application handles common errors without displaying raw error traces to students.
+
+Examples:
+
+### Unknown Student
+
+Instead of displaying an error trace:
+
+```text
+Student not found
+```
+
+### Invalid Course
+
+```text
+Course not found
+```
+
+### Invalid Enrolment
+
+```text
+Enrolment could not be checked.
+```
+
+### AI Failure
+
+The application can fall back to the deterministic rule reasons if the AI response fails validation.
+
+---
+
+# 🛡️ AI Response Validation
+
+The AI response is not treated as the source of truth for enrolment eligibility.
+
+The decision is grounded in:
+
+```text
+Student Data
+      +
+Course Data
+      +
+Enrolment Rules
+      +
+Handbook Information
+      ↓
+AI Response
+      ↓
+Validation
+      ↓
+Final Response
+```
+
+This approach reduces the risk of the language model inventing an enrolment reason.
+
+---
+
+# 🎯 Key Features
+
+| Feature | Status |
+|---|---|
+| Student lookup | ✅ |
+| Fee status | ✅ |
+| Student enrolments | ✅ |
+| Course listing | ✅ |
+| Course details | ✅ |
+| Course capacity | ✅ |
+| Prerequisite checking | ✅ |
+| Credit-limit checking | ✅ |
+| Fee checking | ✅ |
+| Timetable-clash checking | ✅ |
+| Multiple-rule validation | ✅ |
+| Handbook retrieval | ✅ |
+| RAG-based context | ✅ |
+| Ask AI | ✅ |
+| AI response validation | ✅ |
+| HTML/CSS/JS interface | ✅ |
+| FastAPI backend | ✅ |
+| SQLite database | ✅ |
+
+---
+
+# 📈 Why This Architecture?
+
+The project separates **deterministic business rules** from **AI-generated language**.
+
+```text
+                COURSE ENROLMENT ASSISTANT
+
+             ┌──────────────────────┐
+             │      Student         │
+             └──────────┬───────────┘
+                        │
+                        ▼
+             ┌──────────────────────┐
+             │  Web Interface       │
+             │ HTML / CSS / JS      │
+             └──────────┬───────────┘
+                        │
+                        ▼
+             ┌──────────────────────┐
+             │      FastAPI         │
+             │      api.py          │
+             └──────┬───────┬───────┘
+                    │       │
+          ┌─────────┘       └──────────┐
+          ▼                            ▼
+ ┌──────────────────┐        ┌──────────────────┐
+ │ Rules Engine     │        │ Handbook Search  │
+ │ rules.py         │        │ search.py        │
+ └────────┬─────────┘        └────────┬─────────┘
+          │                            │
+          ▼                            ▼
+ ┌──────────────────┐        ┌──────────────────┐
+ │ SQLite Database  │        │ RAG Context      │
+ │ enrolment.db     │        │ Handbook Data    │
+ └────────┬─────────┘        └────────┬─────────┘
+          │                            │
+          └────────────┬───────────────┘
+                       ▼
+              ┌──────────────────┐
+              │ AI Reply         │
+              │ SmolLM2          │
+              │ reply.py         │
+              └────────┬─────────┘
+                       │
+                       ▼
+              ┌──────────────────┐
+              │ Response         │
+              │ Validation       │
+              └────────┬─────────┘
+                       │
+                       ▼
+              ┌──────────────────┐
+              │ Final Response   │
+              │ → Student        │
+              └──────────────────┘
+```
+
+---
+
+# 💡 Design Principle
+
+The most important design principle is:
+
+> **Rules decide. AI explains.**
+
+The Python rules engine determines whether the student can enrol.
+
+The AI layer converts the verified information into a clear, natural-language explanation.
+
+This keeps the system both **useful and explainable**.
+
+---
+
+# 📌 Project Outcome
+
+The Course Enrolment Assistant successfully combines:
+
+```text
+Web Interface
+      ↓
+FastAPI
+      ↓
+Data Extraction
+      ↓
+SQLite Student/Course Data
+      ↓
+Rule-Based Eligibility Checking
+      ↓
+Handbook / RAG Retrieval
+      ↓
+SmolLM2-1.7B-Instruct
+      ↓
+AI Response
+      ↓
+Validation
+      ↓
+Final Student Response
+```
+
+The six defined student scenarios were tested, including the important case where **S-102 checking CS301 returns two independent enrolment reasons**.
+
+---
+
+# 👨‍💻 Author
+
+**Akshay Chindam**
+
+Course Enrolment Assistant — AI / RAG / FastAPI Project
+
+---
+
+# 📄 License
+
+This project is intended for educational and demonstration purposes.
