@@ -30,7 +30,8 @@ Instead of manually checking multiple academic rules and handbook pages, this ap
 7. Ask a natural-language question using **Ask AI**.
 8. Receive an AI-generated explanation based on the rule results and handbook information.
 
----
+<img width="1536" height="1024" alt="enrolment assistant architecture" src="https://github.com/user-attachments/assets/a9e5b900-5f4a-4c80-b6cd-b65ce24d6ed5" />
+
 
 # 🏗️ System Architecture
 
