@@ -1,91 +1,308 @@
-# Course Enrolment Assistant
+Course Enrolment Assistant
 
-This project implements the ten tasks in `Course_Enrolment_Assistant_Tasks.docx`.
+An AI-assisted course enrolment system built with Python, FastAPI, HTML/CSS/JavaScript, rule-based eligibility checks, handbook retrieval (RAG), and SmolLM2-1.7B-Instruct.
 
-## Architecture
+Project Flow
 
-Student request -> AI course extraction -> five SQL-backed rules -> handbook vector search -> AI reply -> Streamlit page.
 
-The AI has two jobs only:
-1. Extract a real course code from the student's message.
-2. Turn rule reasons + retrieved handbook text into a short student-facing reply.
 
-The Python code owns the database, rules and handbook search.
+Main Workflow
 
-## Data-quality findings
+Student enters a question or uses an enrolment tool.
 
-`check_data.py` identifies two real source-data issues:
-- `students.csv`: S-106 has `fees_status` written as `PAID` while the other paid records use `paid`.
-- `students.csv`: S-107 has a missing `year`.
+HTML/CSS/JavaScript sends the request to FastAPI.
 
-The loader normalises fees status to lowercase and keeps the unused year as SQL NULL. Source CSVs are not edited.
+The API identifies the relevant student/course.
 
-## Setup
+The extraction layer maps natural language to a course.
 
-```bash
-python -m venv .venv
-# Windows PowerShell:
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python check_data.py
-python load.py
-python test_rules.py
-```
+All five enrolment rules are evaluated.
 
-## API
+Relevant handbook information is retrieved.
 
-```bash
+The AI reply layer generates a student-friendly response.
+
+The response is validated and a fallback can be returned if validation fails.
+
+The final response is displayed on the webpage.
+
+Technology Stack
+
+Component
+
+Technology
+
+Frontend
+
+HTML, CSS, JavaScript
+
+Backend
+
+FastAPI
+
+Server
+
+Uvicorn
+
+Database
+
+SQLite
+
+LLM
+
+SmolLM2-1.7B-Instruct
+
+Retrieval
+
+Handbook / RAG
+
+Rules
+
+Python
+
+Version Control
+
+Git / GitHub
+
+Example Prompts and Outputs
+
+R1 — Algorithms
+
+Student: S-104
+
+Prompt: I want to take Algorithms this term.
+
+Course: CS201
+
+Output:
+
+Enrolment is blocked because: CS101 grade missing, needs 40.
+
+R2 — Distributed Systems
+
+Student: S-101
+
+Prompt: Can I add Distributed Systems?
+
+Course: CS310
+
+Output:
+
+Enrolment is blocked because: full, 25 of 25.
+
+R3 — Databases
+
+Student: S-103
+
+Prompt: I would like to join Databases please.
+
+Course: CS202
+
+Output:
+
+Enrolment is blocked because: clashes with MA150 Wed 14:00.
+
+R4 — Machine Learning
+
+Student: S-102
+
+Prompt: Trying to sign up for Machine Learning and it will not let me.
+
+Course: CS301
+
+Output:
+
+Enrolment is blocked because: fees are unpaid; would be 65 credits, limit 60.
+
+Important: R4 has two independent blocking reasons, and both are returned.
+
+R5 — Machine Learning
+
+Student: S-105
+
+Prompt: Machine Learning please, I have done everything it asks for.
+
+Course: CS301
+
+Output:
+
+Enrolment is blocked because: CS201 grade 48, needs 55.
+
+R6 — Data Visualisation
+
+Student: S-106
+
+Prompt: Could I take Data Visualisation?
+
+Course: DS220
+
+Output:
+
+You are eligible to enrol in DS220.
+
+Final Test Results
+
+ID
+
+Expected
+
+Actual
+
+Reasons
+
+Handbook
+
+Reply
+
+Overall
+
+R1
+
+CS201
+
+CS201
+
+PASS
+
+YES
+
+PASS
+
+PASS
+
+R2
+
+CS310
+
+CS310
+
+PASS
+
+YES
+
+PASS
+
+PASS
+
+R3
+
+CS202
+
+CS202
+
+PASS
+
+YES
+
+PASS
+
+PASS
+
+R4
+
+CS301
+
+CS301
+
+PASS
+
+YES
+
+PASS
+
+PASS
+
+R5
+
+CS301
+
+CS301
+
+PASS
+
+YES
+
+PASS
+
+PASS
+
+R6
+
+DS220
+
+DS220
+
+PASS
+
+NO
+
+PASS
+
+PASS
+
+Requests passed: 6/6
+
+Ask AI
+
+The Ask AI feature accepts a student ID and a natural-language question and sends the request to the FastAPI backend.
+
+Example:
+
+Student ID: S-102
+Question: Why can't I enrol in Machine Learning?
+
+Expected grounded answer:
+
+Enrolment is blocked because:
+- fees are unpaid
+- would be 65 credits, limit 60
+
+The AI response is generated using the project's instruction-following model and is grounded by the application's rule results and retrieved handbook information.
+
+Running the Project
+
+Start FastAPI:
+
 uvicorn api:app --reload
-```
 
-Open `http://127.0.0.1:8000/docs`.
+Open the webpage:
 
-Endpoints:
-- `GET /students/{id}`
-- `GET /students/{id}/enrolments`
-- `GET /courses`
-- `GET /courses/{code}`
-- `GET /check/{student_id}/{course_code}`
-- `GET /requests/{request_id}`
+http://127.0.0.1:8000/
 
-## Page
+FastAPI documentation:
 
-In another terminal:
+http://127.0.0.1:8000/docs
 
-```bash
-streamlit run app.py
-```
+Project Structure
 
-## Handbook search
+course_enrollment_assistant/
+├── api.py
+├── assistant.py
+├── check_data.py
+├── comparison.py
+├── extract.py
+├── load.py
+├── reply.py
+├── rules.py
+├── search.py
+├── index.html
+├── script.js
+├── style.css
+├── data/
+├── handbook/
+├── enrolment.db
+├── extract_results.json
+├── task8_results.json
+├── task9_results.json
+├── README.md
+└── course_enrollment_flow.png
 
-The first run downloads `BAAI/bge-small-en-v1.5` and embeds all eight handbook pages. Run:
+Key Outcome
 
-```bash
-python search.py
-```
+The complete validation achieved 6/6 requests passed.
 
-The task specifies `BAAI/bge-small-en-v1.5` for retrieval and `HuggingFaceTB/SmolLM2-1.7B-Instruct` for the AI calls.
+The system correctly identified courses, returned all applicable enrolment reasons, retrieved handbook evidence where required, and generated valid replies.
 
-## AI
+Model
 
-`ai.py` follows the task requirements:
-- model loaded once;
-- deterministic generation (`do_sample=False`);
-- message + list of seven real course codes/titles;
-- JSON extraction from first `{` to last `}`;
-- invented codes rejected;
-- no-JSON output raises a controlled error so the caller can retry once.
-
-For a production version, add the retry/validation orchestration around these primitives and never let the model approve an enrolment.
-
-## Expected rule results
-
-See `task10_results.md` and run `python test_rules.py`.
-
-Important handbook constraints:
-- all blocking reasons should be shown together;
-- a full course has no waiting list;
-- only current enrolments count toward the 60-credit limit;
-- completed courses count for prerequisites only when the grade meets the minimum;
-- timetable clashes are any overlap on the same day;
-- a waiver may be recommended but cannot itself approve enrolment.
+The project documentation specifies SmolLM2-1.7B-Instruct. It is used for instruction-following and natural-language reply generation. Deterministic enrolment decisions remain grounded in the application's rules and retrieved information.
