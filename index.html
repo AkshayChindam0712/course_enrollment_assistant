@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Enrollment AI</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="page-shell">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">🎓</div>
+            <div>
+                <h1>Course Enrollment AI</h1>
+                <p>Student &amp; Course Compliance Assistant</p>
+            </div>
+        </div>
+        <div class="online"><span></span> AI System Online</div>
+    </header>
+
+    <main class="dashboard">
+
+        <!-- Student lookup -->
+        <section class="card">
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">STUDENT</div>
+                    <h2>👨‍🎓 Student Lookup</h2>
+                    <p>Find student details, fees status and current enrolments.</p>
+                </div>
+            </div>
+
+            <div class="search-row">
+                <input id="studentId" type="text" placeholder="Enter Student ID e.g. S-102">
+                <button onclick="findStudent()">Search Student</button>
+            </div>
+            <div id="studentResult"></div>
+        </section>
+
+        <!-- Course list -->
+        <section class="card">
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">CATALOGUE</div>
+                    <h2>📚 Course List</h2>
+                    <p>Every course with schedule, credits and capacity.</p>
+                </div>
+                <button class="secondary" onclick="loadCourses()">Refresh Courses</button>
+            </div>
+            <div id="courseList" class="course-list">
+                <div class="empty">Click <strong>Refresh Courses</strong> to load the catalogue.</div>
+            </div>
+        </section>
+
+        <!-- Enrollment check -->
+        <section class="card">
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">DECISION</div>
+                    <h2>🔍 Enrollment Check</h2>
+                    <p>Run all five enrolment rules and show every blocking reason.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <label for="checkStudent">Student ID</label>
+                    <input id="checkStudent" type="text" placeholder="S-102">
+                </div>
+                <div>
+                    <label for="courseCode">Course Code</label>
+                    <input id="courseCode" type="text" placeholder="CS301">
+                </div>
+            </div>
+
+            <button class="full-button" onclick="checkEnrollment()">Check Enrollment</button>
+            <div id="checkResult"></div>
+        </section>
+
+        <!-- AI -->
+        <section class="card ai-card">
+            <div class="card-title">
+                <span class="icon">🤖</span>
+                <div>
+                    <h2>Ask the AI</h2>
+                    <p>Ask your question in natural language. The AI will identify the course automatically.</p>
+                </div>
+            </div>
+
+            <form id="ask-form">
+
+                <label for="ask-student-id">Student ID</label>
+                <input
+                    id="ask-student-id"
+                    type="text"
+                    placeholder="e.g. S-102"
+                >
+
+                <label for="question">Your Question</label>
+                <textarea
+                    id="question"
+                    rows="4"
+                    placeholder="Trying to sign up for Machine Learning and it will not let me."
+                ></textarea>
+
+                <button type="submit" class="full-button">
+                    Ask AI
+                </button>
+
+            </form>
+
+            <div id="ask-loading" class="loading hidden">
+                <span class="spinner"></span>
+                
+            </div>
+
+            <div id="ask-message"></div>
+            <div id="ask-result" class="result"></div>
+        </section>
+
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

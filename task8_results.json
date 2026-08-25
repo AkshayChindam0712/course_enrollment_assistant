@@ -1,0 +1,50 @@
+[
+  {
+    "request": "R1",
+    "student_id": "S-104",
+    "message": "I want to take Algorithms this term.",
+    "course_code": "CS201",
+    "status": "success - course title match",
+    "error": null
+  },
+  {
+    "request": "R2",
+    "student_id": "S-101",
+    "message": "Can I add Distributed Systems?",
+    "course_code": "CS310",
+    "status": "success - course title match",
+    "error": null
+  },
+  {
+    "request": "R3",
+    "student_id": "S-103",
+    "message": "I would like to join Databases please.",
+    "course_code": "CS202",
+    "status": "success - course title match",
+    "error": null
+  },
+  {
+    "request": "R4",
+    "student_id": "S-102",
+    "message": "Trying to sign up for Machine Learning and it will not let me.",
+    "course_code": "CS301",
+    "status": "success - course title match",
+    "error": null
+  },
+  {
+    "request": "R5",
+    "student_id": "S-105",
+    "message": "Machine Learning please, I have done everything it asks for.",
+    "course_code": "CS301",
+    "status": "success - course title match",
+    "error": null
+  },
+  {
+    "request": "R6",
+    "student_id": "S-106",
+    "message": "Could I take Data Visualisation?",
+    "course_code": "DS220",
+    "status": "success - course title match",
+    "error": null
+  }
+]
