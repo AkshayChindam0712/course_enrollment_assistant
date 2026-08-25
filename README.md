@@ -69,17 +69,17 @@ flowchart LR
 
     M --> B
 
-    style A fill:#e8f1ff,stroke:#2563eb
-    style B fill:#dbeafe,stroke:#2563eb
-    style C fill:#dcfce7,stroke:#16a34a
-    style F fill:#dcfce7,stroke:#16a34a
-    style G fill:#fff7ed,stroke:#ea580c
-    style H fill:#f3e8ff,stroke:#9333ea
-    style I fill:#f3e8ff,stroke:#9333ea
-    style J fill:#dbeafe,stroke:#2563eb
-    style K fill:#dbeafe,stroke:#2563eb
-    style L fill:#fef3c7,stroke:#d97706
-    style M fill:#dcfce7,stroke:#16a34a
+     style A fill:#e8f1ff,stroke:#2563eb,color:#000000
+    style B fill:#dbeafe,stroke:#2563eb,color:#000000
+    style C fill:#dcfce7,stroke:#16a34a,color:#000000
+    style F fill:#dcfce7,stroke:#16a34a,color:#000000
+    style G fill:#fff7ed,stroke:#ea580c,color:#000000
+    style H fill:#f3e8ff,stroke:#9333ea,color:#000000
+    style I fill:#f3e8ff,stroke:#9333ea,color:#000000
+    style J fill:#dbeafe,stroke:#2563eb,color:#000000
+    style K fill:#dbeafe,stroke:#2563eb,color:#000000
+    style L fill:#fef3c7,stroke:#d97706,color:#000000
+    style M fill:#dcfce7,stroke:#16a34a,color:#000000
 ```
 
 ---
