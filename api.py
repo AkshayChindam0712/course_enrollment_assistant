@@ -769,7 +769,7 @@ def answer_request(
                 get_handbook_for_reasons,
                 generate_valid_reply,
                 handbook_file_names,
-                validate_reply
+                
             )
 
             handbook_documents = (
@@ -784,18 +784,15 @@ def answer_request(
                 )
             )
 
-            final_reply = (
+            final_reply, reply_valid = (
                 generate_valid_reply(
+                    student_id,
+                    course_code,
                     blocking_reasons,
                     handbook_documents
                 )
             )
 
-            reply_valid = validate_reply(
-                final_reply,
-                blocking_reasons,
-                handbook_documents
-            )
 
         except Exception as error:
 
@@ -1072,7 +1069,7 @@ def ask_question(
 
     if blocking_reasons:
 
-        print("Generating AI reply...")
+
 
         try:
             from reply import (
@@ -1091,21 +1088,14 @@ def ask_question(
             )
 
             ai_reply = generate_valid_reply(
+                student_id,
+                course_code,
                 blocking_reasons,
                 handbook_documents
-            )
-
-            print("Validating AI reply...")
-
-            reply_valid = validate_reply(
-                ai_reply,
-                blocking_reasons,
-                handbook_documents
-            )
+            ) 
 
             print("Reply valid:", reply_valid)
 
-            # Return AI response even if validation fails.
             final_reply = ai_reply
 
         except Exception as error:

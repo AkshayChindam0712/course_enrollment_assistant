@@ -16,10 +16,12 @@
       "CS101 grade missing, needs 40"
     ],
     "handbook": [
-      "prerequisites.md"
+      "prerequisites.md",
+      "advice.md",
+      "waivers.md"
     ],
-    "reply": "Dear [Student Name],\n\nI am writing to inform you that your course enrolment is blocked due to missing grades in CS101. The minimum grade required for this course is 40.\n\nTo meet the prerequisites for CS101, you must have completed and passed the earlier course. If you are currently enrolled in CS101, the grade you have is not sufficient to meet the prerequisites.\n\nTo resolve this issue, I recommend that you retake the earlier course or seek a waiver from the department. You can find more information about this in the \"Prerequisites\" section of the CS101 course page in the [Hands-on Learning Management System Handbook](https://hands-on-learning-management-system.com/prerequisites).\n\nPlease review the handbook for further guidance and assistance.",
-    "reply_valid": false
+    "reply": "\"Dear S-104, unfortunately, the earlier course grade is missing, which is a prerequisite for CS201. Please check your earlier course grades and ensure they are completed and graded to meet the minimum requirement. If you have any questions or concerns, please reach out to the relevant",
+    "reply_valid": true
   },
   {
     "request_id": "R2",
@@ -41,8 +43,8 @@
       "capacity.md",
       "advice.md"
     ],
-    "reply": "Dear [Student Name],\n\nI regret to inform you that your course enrolment is blocked due to the following reasons:\n\n1. Full capacity: Your course is currently full, and there are no available spots.\n\nAccording to the enrolment rules, a course is considered full when the number of enrolled students reaches its capacity. In this case, your course is within five places of capacity, which means it is nearly full.\n\nTo enroll in a full course, you should consider taking an alternative course for this term and try again next term.\n\nFor more information on course capacities and enrolment rules, please refer to the \"Class sizes\" section in the \"Capacity\" handbook.\n\nBest regards,\n\n[Your Name]",
-    "reply_valid": false
+    "reply": "Dear S-101,\n\nThank you for your interest in enrolling in CS310. Unfortunately, the course is currently full, and there are no available spots. We recommend considering alternative courses that are within your eligibility. For more information, please refer to the capacity.md file",
+    "reply_valid": true
   },
   {
     "request_id": "R3",
@@ -63,8 +65,8 @@
     "handbook": [
       "timetable.md"
     ],
-    "reply": "\"Dear [Student Name],\n\nI regret to inform you that your course enrolment is blocked due to a timetable clash. Specifically, your course [Course Code] is scheduled to meet on Wednesdays at 14:00, which overlaps with another course you are currently enrolled in, [Course Code 2].\n\nAccording to the Enrolment Rules, a student cannot enrol in two courses that meet at the same time on the same day. This rule aims to ensure that students have a clear and uninterrupted learning experience.\n\nTo resolve this issue, I recommend dropping one of the two courses before enrolling in the other. Please refer to the [Handbook Text] for more information on timetable clashes and the steps to follow.\n\nPlease note that the handbook advises students to drop the course that is not currently scheduled to meet on the same day. If you have",
-    "reply_valid": false
+    "reply": "\"Sorry, S-103, but you cannot enroll in both CS202 and the earlier course Wed 14:00 due to a timetable clash. Please drop one of the courses before enrolling in the other. According to the timetable, the next course that meets is Th",
+    "reply_valid": true
   },
   {
     "request_id": "R4",
@@ -87,7 +89,7 @@
       "fees.md",
       "credit_limit.md"
     ],
-    "reply": "Dear Student,\n\nYour course enrolment is blocked due to unpaid fees. The handbook states that a student whose fees are unpaid may not enrol in any course. This is checked against the fees status on your student record, which shows that your fees are not paid.\n\nTo resolve this issue, please contact the finance office to discuss possible payment options. The handbook recommends that you refer to the \"Fees\" section for further guidance.",
+    "reply": "Enrolment is blocked because: fees are unpaid; would be 65 credits, limit 60.",
     "reply_valid": false
   },
   {
@@ -107,10 +109,12 @@
       "CS201 grade 48, needs 55"
     ],
     "handbook": [
-      "prerequisites.md"
+      "prerequisites.md",
+      "advice.md",
+      "waivers.md"
     ],
-    "reply": "Dear [Student Name],\n\nI regret to inform you that your course enrolment is blocked due to the following reasons:\n\n1. CS201 grade 48, needs 55\n\nThe prerequisite for CS201 is not met because your grade in CS201 is 48, which is below the required 55. You must retake CS201 or ask the department for a waiver.\n\nPlease refer to the handbook for more information on prerequisites and the steps you can take next.\n\nThe handbook page you should refer to is [Prerequisites](#prerequisites).",
-    "reply_valid": false
+    "reply": "\"Dear S-105, unfortunately, the earlier course grade of 48 is below the minimum required for CS301, which is 55. To enroll in CS301, you will need to retake the earlier course or request a waiver from the department",
+    "reply_valid": true
   },
   {
     "request_id": "R6",
@@ -127,7 +131,7 @@
     },
     "reasons": [],
     "handbook": [],
-    "reply": "You are eligible to enrol in DS220.",
+    "reply": "S-106, you are eligible to enrol in DS220.",
     "reply_valid": true
   }
 ]

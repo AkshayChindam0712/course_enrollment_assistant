@@ -16,9 +16,7 @@ from rules import check_all, reasons
 BASE_DIR = Path(__file__).resolve().parent
 
 DB_FILE = BASE_DIR / "enrolment.db"
-
 REQUESTS_DIR = BASE_DIR / "data" / "requests"
-
 HANDBOOK_DIR = BASE_DIR / "data" / "handbook"
 
 MODEL_NAME = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
@@ -42,6 +40,7 @@ model = AutoModelForCausalLM.from_pretrained(
 model.eval()
 
 print("Model loaded.")
+
 
 
 # ============================================================
@@ -103,7 +102,9 @@ def get_handbook_for_reasons(
     files = []
 
     reason_text = " ".join(
-        blocking_reasons
+        str(reason)
+        for reason in blocking_reasons
+        if reason is not None
     ).lower()
 
     # --------------------------------------------------------
@@ -143,6 +144,18 @@ def get_handbook_for_reasons(
             "prerequisites.md"
         )
 
+        # Task 9: advice can be relevant when
+        # prerequisite is missing.
+        files.append(
+            "advice.md"
+        )
+
+        # Task 9: waiver information may be needed
+        # for prerequisite problems.
+        files.append(
+            "waivers.md"
+        )
+
     # --------------------------------------------------------
     # Capacity
     # --------------------------------------------------------
@@ -164,14 +177,17 @@ def get_handbook_for_reasons(
     # Timetable
     # --------------------------------------------------------
 
-    if "clash" in reason_text:
+    if (
+        "clash" in reason_text
+        or "timetable" in reason_text
+    ):
 
         files.append(
             "timetable.md"
         )
 
     # --------------------------------------------------------
-    # Waiver
+    # Waiver explicitly mentioned
     # --------------------------------------------------------
 
     if (
@@ -183,7 +199,9 @@ def get_handbook_for_reasons(
             "waivers.md"
         )
 
+    # --------------------------------------------------------
     # Remove duplicates
+    # --------------------------------------------------------
 
     files = list(
         dict.fromkeys(files)
@@ -231,61 +249,123 @@ def build_handbook_text(
 
 
 # ============================================================
+# EXTRACT COURSE CODES
+# ============================================================
+
+def extract_course_codes(
+    text
+):
+
+    if not text:
+        return []
+
+    return re.findall(
+        r"\b[A-Z]{2,4}\d{3}\b",
+        text.upper()
+    )
+
+
+# ============================================================
+# EXTRACT NUMBERS
+# ============================================================
+
+def extract_numbers(
+    text
+):
+
+    if not text:
+        return []
+
+    return re.findall(
+        r"\b\d+(?:\.\d+)?\b",
+        text
+    )
+
+
+# ============================================================
 # BUILD AI PROMPT
 # ============================================================
 
 def build_prompt(
+    student_id,
+    course_code,
     blocking_reasons,
     handbook_documents
 ):
 
     reasons_text = "\n".join(
-        f"- {reason}"
-        for reason in blocking_reasons
+        f"REASON {i}: {reason}"
+        for i, reason in enumerate(
+            blocking_reasons,
+            start=1
+        )
     )
 
     handbook_text = build_handbook_text(
         handbook_documents
     )
 
+    # --------------------------------------------------------
+    # IMPORTANT:
+    # Hide prerequisite/other course codes from the model.
+    # Keep only the target course code.
+    # --------------------------------------------------------
+
+    all_text = (
+        reasons_text
+        + "\n"
+        + handbook_text
+    )
+
+    found_codes = extract_course_codes(
+        all_text
+    )
+
+    for code in found_codes:
+
+        if code.upper() != course_code.upper():
+
+            reasons_text = reasons_text.replace(
+                code,
+                "the earlier course"
+            )
+
+            handbook_text = handbook_text.replace(
+                code,
+                "the earlier course"
+            )
+
     return f"""
-Write a short message to the student about
-why their course enrolment is blocked.
+You are a college course-enrolment assistant.
 
-Use ONLY the information provided below.
+TARGET COURSE: {course_code}
+STUDENT ID: {student_id}
 
-REASONS FOUND BY THE ENROLMENT RULES:
-
+BLOCKING REASONS:
 {reasons_text}
 
-HANDBOOK TEXT:
-
+HANDBOOK:
 {handbook_text}
 
-Requirements:
+Write ONLY a short 2-3 sentence student-facing reply.
 
-1. Every reason listed above must appear in
-   the reply.
-
-2. Explain why each reason blocks enrolment.
-
-3. Explain what the handbook says the student
-   should do next.
-
-4. Name the handbook page when using its advice.
-
-5. Do not invent numbers.
-
-6. Do not invent course codes.
-
-7. Do not invent student information.
-
-8. Do not say the enrolment is approved.
-
-9. Keep the reply short and suitable for a student.
-
-Return only the student-facing message.
-"""
+Rules:
+1. Use {course_code} as the target course.
+2. Never confuse the earlier/prerequisite course with the target course.
+3. Explain every blocking reasons.
+4. Explain why enrolment is blocked.
+5. Give the next action from the handbook.
+6. Mention the relevant handbook filename.
+7. Use the student ID exactly as provided.
+8. Use only supplied facts.
+9. if there are multiple blocking reasons, explain EVERY reason in the reply.
+10. Do not invent course codes.
+11. Do not say the enrolment is approved.
+12. If waiver information is provided and waiver is relevant,
+    mention who approves the waiver.
+13. Return only the final student-facing reply.
+Return only 2-3 sentences.
+""".strip()
 
 
 # ============================================================
@@ -293,11 +373,15 @@ Return only the student-facing message.
 # ============================================================
 
 def generate_reply(
+    student_id,
+    course_code,
     blocking_reasons,
     handbook_documents
 ):
 
     prompt = build_prompt(
+        student_id,
+        course_code,
         blocking_reasons,
         handbook_documents
     )
@@ -316,6 +400,10 @@ def generate_reply(
         return_tensors="pt"
     )
 
+    # --------------------------------------------------------
+    # Handle BatchEncoding or Tensor
+    # --------------------------------------------------------
+
     if hasattr(
         inputs,
         "input_ids"
@@ -327,20 +415,16 @@ def generate_reply(
             inputs.attention_mask
         )
 
-    else:
-
-        input_ids = inputs
-
-        attention_mask = torch.ones_like(
-            input_ids
-        )
+    # --------------------------------------------------------
+    # Generate
+    # --------------------------------------------------------
 
     with torch.no_grad():
 
         output = model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            max_new_tokens=180,
+            max_new_tokens=60,
             do_sample=False,
             pad_token_id=tokenizer.eos_token_id
         )
@@ -360,71 +444,172 @@ def generate_reply(
 
 
 # ============================================================
-# EXTRACT NUMBERS FROM TEXT
-# ============================================================
-
-def extract_numbers(
-    text
-):
-
-    return re.findall(
-        r"\b\d+(?:\.\d+)?\b",
-        text
-    )
-
-
-# ============================================================
-# EXTRACT COURSE CODES
-# ============================================================
-
-def extract_course_codes(
-    text
-):
-
-    return re.findall(
-        r"\b[A-Z]{2,4}\d{3}\b",
-        text.upper()
-    )
-
-
-# ============================================================
 # VALIDATE REPLY
 # ============================================================
 
 def validate_reply(
     reply,
+    student_id,
+    course_code,
     blocking_reasons,
     handbook_documents
 ):
 
-    if not reply:
+    # --------------------------------------------------------
+    # 1. Reply must exist
+    # --------------------------------------------------------
 
+    if not isinstance(
+        reply,
+        str
+    ):
+        print(
+            "Validation failed: reply is not text"
+        )
+        return False
+
+    reply = reply.strip()
+
+    if not reply:
+        print(
+            "Validation failed: empty reply"
+        )
         return False
 
     reply_lower = reply.lower()
 
     # --------------------------------------------------------
-    # 1. Every reason must appear
+    # 2. Every blocking reason must be addressed
     # --------------------------------------------------------
+
+    ignored_words = {
+        "this",
+        "that",
+        "with",
+        "from",
+        "have",
+        "been",
+        "needs",
+        "need",
+        "must",
+        "student",
+        "course",
+        "enrolment",
+        "enrollment",
+        "because"
+    }
 
     for reason in blocking_reasons:
 
-        if reason.lower() not in reply_lower:
+        words = []
 
-            return False
+        for word in reason.lower().split():
+
+            cleaned = word.strip(
+                ".,:;()[]"
+            )
+
+            if (
+                len(cleaned) >= 4
+                and cleaned not in ignored_words
+            ):
+
+                words.append(
+                    cleaned
+                )
+
+        if words:
+
+            matched = any(
+                word in reply_lower
+                for word in words
+            )
+
+            if not matched:
+
+                print(
+                    "Validation failed: "
+                    "reason not addressed:",
+                    reason
+                )
+
+                return False
 
     # --------------------------------------------------------
-    # 2. Every number in reply must have been provided
+    # 3. Correct target course code
+    # --------------------------------------------------------
+
+    reply_codes = set(
+        extract_course_codes(
+            reply
+        )
+    )
+
+    if course_code.upper() not in reply_codes:
+
+        print(
+            "Validation failed: "
+            "target course code missing"
+        )
+
+        print(
+            "Expected:",
+            course_code
+        )
+
+        print(
+            "Found:",
+            reply_codes
+        )
+
+        return False
+
+    # No other course code allowed
+    extra_codes = (
+        reply_codes
+        - {course_code.upper()}
+    )
+
+    if extra_codes:
+
+        print(
+            "Validation failed: "
+            "wrong/invented course code"
+        )
+
+        print(
+            "Expected:",
+            course_code
+        )
+
+        print(
+            "Found:",
+            extra_codes
+        )
+
+        return False
+
+    # --------------------------------------------------------
+    # 4. Build supplied text
     # --------------------------------------------------------
 
     supplied_text = " ".join(
-        blocking_reasons
+        str(reason)
+        for reason in blocking_reasons
+        if reason is not None
     )
 
     for document in handbook_documents:
 
         supplied_text += " "
-        supplied_text += document["text"]
+
+        supplied_text += str(
+            document.get("text") or ""
+        )
+
+    # --------------------------------------------------------
+    # 5. Number validation
+    # --------------------------------------------------------
 
     supplied_numbers = set(
         extract_numbers(
@@ -438,58 +623,163 @@ def validate_reply(
         )
     )
 
-    if not reply_numbers.issubset(
-        supplied_numbers
-    ):
+    # --------------------------------------------------------
+    # Allow numeric part of student ID
+    # Example: S-104 -> 104
+    # --------------------------------------------------------
+
+    if student_id:
+
+        student_id_number = "".join(
+            char
+            for char in str(student_id)
+            if char.isdigit()
+        )
+
+        if student_id_number:
+
+            reply_numbers.discard(
+                student_id_number
+            )
+
+    # --------------------------------------------------------
+    # Allow numeric part of target course code
+    # Example: CS301 -> 301
+    # --------------------------------------------------------
+
+    course_digits = "".join(
+        char
+        for char in str(course_code)
+        if char.isdigit()
+    )
+
+    if course_digits:
+
+        reply_numbers.discard(
+            course_digits
+        )
+
+    unknown_numbers = (
+        reply_numbers
+        - supplied_numbers
+    )
+
+    if unknown_numbers:
+
+        print(
+            "Validation failed: "
+            "unsupported number:",
+            unknown_numbers
+        )
+
+        print(
+            "Allowed numbers:",
+            supplied_numbers
+        )
 
         return False
 
     # --------------------------------------------------------
-    # 3. Every course code must have been provided
+    # 6. Student ID validation
     # --------------------------------------------------------
 
-    supplied_codes = set(
-        extract_course_codes(
-            supplied_text
-        )
-    )
+    if student_id:
 
-    reply_codes = set(
-        extract_course_codes(
-            reply
-        )
-    )
+        if str(student_id).lower() not in reply_lower:
 
-    if not reply_codes.issubset(
-        supplied_codes
-    ):
+            print(
+                "Validation failed: "
+                "student ID missing"
+            )
 
-        return False
+            return False
+
+    
 
     # --------------------------------------------------------
-    # 4. If waiver is mentioned, handbook must be present
+    # 8. Waiver validation
     # --------------------------------------------------------
 
     if "waiver" in reply_lower:
 
-        waiver_present = any(
-            document["file"].lower()
-            == "waivers.md"
-            for document in handbook_documents
-        )
+        waiver_text = ""
 
-        if not waiver_present:
+        for document in handbook_documents:
+
+            if (
+                str(document.get("file", "")).lower()
+                == "waivers.md"
+            ):
+
+                waiver_text += str(
+                    document.get("text") or ""
+                ).lower()
+
+        if not waiver_text:
+
+            print(
+                "Validation failed: "
+                "waiver mentioned but waivers.md "
+                "was not provided"
+            )
 
             return False
 
-        # Never approve enrolment
+        # No approval claim
+        forbidden_approval_phrases = [
+            "enrolment approved",
+            "enrollment approved",
+            "enrolment is approved",
+            "enrollment is approved",
+            "successfully enrolled",
+            "enrolment successful",
+            "enrollment successful"
+        ]
 
-        if (
-            "approved" in reply_lower
-            or "enrolment approved" in reply_lower
+        if any(
+            phrase in reply_lower
+            for phrase in forbidden_approval_phrases
         ):
 
+            print(
+                "Validation failed: "
+                "enrolment approval mentioned"
+            )
+
             return False
+
+        # ----------------------------------------------------
+        # Check that waiver approver information exists
+        # in the supplied waiver handbook.
+        # ----------------------------------------------------
+
+        approver_words = [
+            "approve",
+            "approves",
+            "approval",
+            "department",
+            "coordinator",
+            "registrar",
+            "dean"
+        ]
+
+        if not any(
+            word in waiver_text
+            for word in approver_words
+        ):
+
+            print(
+                "Validation warning: "
+                "waiver approver not found in handbook"
+            )
+
+    # --------------------------------------------------------
+    # PASS
+    # --------------------------------------------------------
+
+    print(
+        "Validation passed"
+    )
 
     return True
 
@@ -505,54 +795,116 @@ def plain_reasons(
     return (
         "Enrolment is blocked because: "
         + "; ".join(
-            blocking_reasons
+            str(reason)
+            for reason in blocking_reasons
         )
         + "."
     )
 
 
 # ============================================================
-# GENERATE WITH RETRY
+# GENERATE + VALIDATE + RETRY ONCE
 # ============================================================
 
 def generate_valid_reply(
+    student_id,
+    course_code,
     blocking_reasons,
     handbook_documents
 ):
 
+    # --------------------------------------------------------
+    # FIRST ATTEMPT
+    # --------------------------------------------------------
+
     print(
-        "Generating AI reply..."
+        "Generating first AI reply..."
     )
 
-    reply = generate_reply(
+    reply_1 = generate_reply(
+        student_id,
+        course_code,
         blocking_reasons,
         handbook_documents
     )
 
     print(
-        "Validating AI reply..."
+        "Validating first AI reply..."
     )
 
-    if validate_reply(
-        reply,
+    valid_1 = validate_reply(
+        reply_1,
+        student_id,
+        course_code,
         blocking_reasons,
         handbook_documents
-    ):
+    )
+
+    if valid_1:
+
         print(
-            "AI reply passed validation."
-        )
-    else:
-        print(
-            "AI reply failed validation."
-        )
-        print(
-            "Returning AI reply despite validation failure."
+            "First reply validation passed."
         )
 
-    # Always return the AI-generated response. Validation is retained
-    # for logging/diagnostics, but it no longer replaces the AI reply
-    # with the plain fallback or triggers a second generation.
-    return reply
+        return reply_1, True
+
+    # --------------------------------------------------------
+    # SECOND ATTEMPT
+    # --------------------------------------------------------
+
+    print(
+        "First reply validation failed."
+    )
+
+    print(
+        "Generating second AI reply..."
+    )
+
+    reply_2 = generate_reply(
+        student_id,
+        course_code,
+        blocking_reasons,
+        handbook_documents
+    )
+
+    print(
+        "Validating second AI reply..."
+    )
+
+    valid_2 = validate_reply(
+        reply_2,
+        student_id,
+        course_code,
+        blocking_reasons,
+        handbook_documents
+    )
+
+    if valid_2:
+
+        print(
+            "Second reply validation passed."
+        )
+
+        return reply_2, True
+
+    # --------------------------------------------------------
+    # BOTH FAILED
+    # --------------------------------------------------------
+
+    print(
+        "Second reply validation failed."
+    )
+
+    print(
+        "Returning plain blocking reasons."
+    )
+
+    return (
+        plain_reasons(
+            blocking_reasons
+        ),
+        False,
+    )
 
 
 # ============================================================
@@ -572,8 +924,17 @@ def process_request(
 
         return {
             "request_id": request_id,
-            "error": "Request file not found"
+            "error": "Request file not found",
+            "course_code": None,
+            "reasons": [],
+            "handbook": [],
+            "reply": None,
+            "reply_valid": False
         }
+
+    # --------------------------------------------------------
+    # Load request
+    # --------------------------------------------------------
 
     with open(
         request_file,
@@ -585,32 +946,47 @@ def process_request(
             file
         )
 
-    student_id = request_data[
+    student_id = request_data.get(
         "student_id"
-    ]
+    )
 
-    message = request_data[
+    message = request_data.get(
         "message"
-    ]
+    )
 
-    # ========================================================
-    # TASK 8
-    #
-    # Extract course code.
-    #
-    # This assumes extract.py provides:
-    #
-    # extract_course_code(message)
-    #
-    # ========================================================
+    if not student_id:
+
+        return {
+            "request_id": request_id,
+            "error": "student_id missing",
+            "course_code": None,
+            "reasons": [],
+            "handbook": [],
+            "reply": None,
+            "reply_valid": False
+        }
+
+    if not message:
+
+        return {
+            "request_id": request_id,
+            "error": "message missing",
+            "course_code": None,
+            "reasons": [],
+            "handbook": [],
+            "reply": None,
+            "reply_valid": False
+        }
+
+    # --------------------------------------------------------
+    # TASK 8: Extract course
+    # --------------------------------------------------------
 
     from extract import extract_course_code
 
     extraction = extract_course_code(
         message
     )
-
-    # Your Task 8 function may return a dictionary
 
     if isinstance(
         extraction,
@@ -625,6 +1001,12 @@ def process_request(
 
         course_code = extraction
 
+    if course_code:
+
+        course_code = str(
+            course_code
+        ).strip().upper()
+
     if not course_code:
 
         return {
@@ -635,15 +1017,59 @@ def process_request(
             "reasons": [],
             "handbook": [],
             "reply": (
-                "I could not identify the course "
-                "from your message."
+                "I could not identify "
+                "the course from your message."
             ),
             "reply_valid": False
         }
 
-    # ========================================================
-    # RULES
-    # ========================================================
+    print(
+        "Extracted course:",
+        course_code
+    )
+
+    # --------------------------------------------------------
+    # Verify course exists
+    # --------------------------------------------------------
+
+    connection = get_connection()
+
+    try:
+
+        course = connection.execute(
+            """
+            SELECT
+                course_code,
+                title
+            FROM courses
+            WHERE course_code = ?
+            """,
+            (course_code,)
+        ).fetchone()
+
+    finally:
+
+        connection.close()
+
+    if course is None:
+
+        return {
+            "request_id": request_id,
+            "student_id": student_id,
+            "message": message,
+            "course_code": course_code,
+            "reasons": [],
+            "handbook": [],
+            "reply": (
+                f"Course {course_code} "
+                "was not found."
+            ),
+            "reply_valid": False
+        }
+
+    # --------------------------------------------------------
+    # RUN RULES
+    # --------------------------------------------------------
 
     rule_result = check_all(
         student_id,
@@ -654,9 +1080,9 @@ def process_request(
         rule_result
     )
 
-    # ========================================================
+    # --------------------------------------------------------
     # HANDBOOK
-    # ========================================================
+    # --------------------------------------------------------
 
     handbook_documents = (
         get_handbook_for_reasons(
@@ -668,31 +1094,33 @@ def process_request(
         handbook_documents
     )
 
-    # ========================================================
+    # --------------------------------------------------------
     # AI REPLY
-    # ========================================================
+    # --------------------------------------------------------
 
     if blocking_reasons:
 
-        reply = generate_valid_reply(
-            blocking_reasons,
-            handbook_documents
-        )
-
-        reply_valid = validate_reply(
-            reply,
-            blocking_reasons,
-            handbook_documents
+        reply, reply_valid = (
+            generate_valid_reply(
+                student_id,
+                course_code,
+                blocking_reasons,
+                handbook_documents
+            )
         )
 
     else:
 
         reply = (
-            "You are eligible to enrol in "
-            f"{course_code}."
+            f"{student_id}, you are eligible "
+            f"to enrol in {course_code}."
         )
 
         reply_valid = True
+
+    # --------------------------------------------------------
+    # FINAL RESULT
+    # --------------------------------------------------------
 
     return {
         "request_id": request_id,
@@ -744,9 +1172,19 @@ def process_all_requests():
 
         except Exception as error:
 
+            print(
+                "ERROR:",
+                repr(error)
+            )
+
             result = {
                 "request_id": request_id,
-                "error": str(error)
+                "error": str(error),
+                "course_code": None,
+                "reasons": None,
+                "handbook": None,
+                "reply": None,
+                "reply_valid": False
             }
 
         results.append(
@@ -754,7 +1192,6 @@ def process_all_requests():
         )
 
         print()
-
         print(
             "Course:",
             result.get(
@@ -784,6 +1221,13 @@ def process_all_requests():
         print(
             result.get(
                 "reply"
+            )
+        )
+
+        print(
+            "Reply valid:",
+            result.get(
+                "reply_valid"
             )
         )
 
@@ -829,7 +1273,9 @@ if __name__ == "__main__":
 
     print()
     print("=" * 60)
-    print("processing all requests...")
+    print(
+        "Processing all requests..."
+    )
     print("=" * 60)
 
     results = process_all_requests()
@@ -840,7 +1286,9 @@ if __name__ == "__main__":
 
     print()
     print("=" * 60)
-    print("processing COMPLETE")
+    print(
+        "PROCESSING COMPLETE"
+    )
     print("=" * 60)
 
     for result in results:

@@ -87,20 +87,43 @@ def search(question, k=3):
 
 if __name__ == "__main__":
 
-    question = (
-        "student is currently enrolled in courses and adding another "
-        "course would put their total credits above the maximum of "
-        "60 credits for one term"
-    )
-    print("Question:")
-    print(question)
+    if __name__ == "__main__":
 
-    print()
-    print("Top results:")
+        questions = [
+            ("prerequisites.md",
+            "student completed the prerequisite course but their grade was below the minimum required grade"),
 
-    for result in search(question):
+            ("fees.md",
+            "student has unpaid fees and therefore cannot enrol in any course"),
 
-        print(
-            f"{result['file']}: "
-            f"{result['score']:.2f}"
-        )
+            ("capacity.md",
+            "the course has reached its maximum capacity and no additional students may join"),
+
+            ("credit_limit.md",
+            "adding the requested course would make the student's total credits greater than 60 in the current term"),
+
+            ("timetable.md",
+            "the requested course overlaps with a course the student is currently taking on the same day"),
+
+            ("waivers.md",
+            "student wants to request a waiver for a prerequisite because they have equivalent experience"),
+
+            ("withdrawal.md",
+            "student wants to drop a course during the first three weeks of the term"),
+
+            ("advice.md",
+            "student has multiple enrolment problems and should be told every reason, why each blocks enrolment, and what they can do next")
+        ]
+
+    for rule, question in questions:
+
+        print("\nRule:", rule)
+        print("Question:", question)
+        print("Top results:")
+
+        for result in search(question):
+
+            print(
+                f"  {result['file']}: "
+                f"{result['score']:.2f}"
+            )

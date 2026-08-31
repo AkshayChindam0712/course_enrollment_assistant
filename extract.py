@@ -262,25 +262,43 @@ def ask_ai(
     course_list = build_course_list(
         courses
     )
-
     prompt = f"""
-Identify the ONE course the student is asking about.
+Extract the course code from the student's message.
 
-Student message:
+AVAILABLE COURSE CODES:
+{course_codes}
+
+STUDENT MESSAGE:
 {message}
 
-Real courses:
-{course_list}
+STRICT RULES:
 
-Rules:
-1. Match the course named or clearly referred to in the message.
-2. Do not choose a course just because it appears first or last.
-3. The course_code must be one of the real course codes listed above.
-4. Return JSON only.
-5. The JSON must contain exactly one field: course_code.
+1. Return a course code ONLY if the student explicitly mentions
+   the course code OR explicitly mentions a course name.
 
-Required JSON shape:
-{{"course_code": "<one real course code>"}}
+2. If the student does not mention any course name or course code,
+   return null.
+
+3. NEVER guess or infer a course from the student's other information.
+
+4. NEVER choose a course just because it appears in the AVAILABLE
+   COURSE CODES list.
+
+5. If a course name is mentioned, map it to its corresponding
+   course code from AVAILABLE COURSE CODES.
+
+6. The returned course code MUST be one of the AVAILABLE COURSE CODES.
+
+7. If there is not enough information to identify a course,
+   return null.
+
+Return ONLY valid JSON in this format:
+
+{{"course_code": "CS301"}}
+
+or:
+
+{{"course_code": null}}
 """
 
     messages = [
